@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F&L Montana">
+<meta name="theme-color" content="#1a1a1a">
+<title>Fear & Loathing in Montana</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%238B0000'/><text x='50' y='62' font-size='48' text-anchor='middle' fill='white' font-family='Georgia' font-weight='bold'>F&amp;L</text></svg>">
+<style>
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f1ea; color: #1a1a1a; -webkit-font-smoothing: antialiased; }
+  body { padding-bottom: 80px; }
+
+  /* HEADER */
+  .hero {
+    background: linear-gradient(135deg, #8B0000 0%, #5a0000 100%);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top) + 24px) 20px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  .hero h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 26px; margin: 0 0 4px; letter-spacing: 0.5px; font-weight: 700; text-transform: uppercase; }
+  .hero .sub { font-size: 14px; opacity: 0.9; font-style: italic; margin: 0 0 8px; }
+  .hero .dates { font-size: 13px; opacity: 0.75; margin: 0; }
+
+  /* DAY TABS */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    background: #fff;
+    border-bottom: 1px solid #e4ddd0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .tab.active { color: #8B0000; border-bottom-color: #8B0000; }
+  .tab .day-num { font-size: 10px; display: block; color: #999; margin-bottom: 2px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tab.active .day-num { color: #8B0000; }
+
+  /* CONTENT */
+  .content { padding: 0 16px; max-width: 720px; margin: 0 auto; }
+  .day-panel { display: none; padding: 20px 0; }
+  .day-panel.active { display: block; }
+
+  .day-header {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    border: 1px solid #e4ddd0;
+  }
+  .day-header h2 { font-size: 18px; margin: 0 0 4px; color: #1a1a1a; }
+  .day-header .date { font-size: 13px; color: #8B0000; font-weight: 600; margin: 0 0 6px; }
+  .day-header .summary { font-size: 14px; color: #555; margin: 0; line-height: 1.5; }
+
+  /* CARDS */
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid #e4ddd0;
+  }
+  .card-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-header:active { background: #faf7f1; }
+  .time-badge {
+    flex: 0 0 auto;
+    background: #f5ebd8;
+    color: #8B6A00;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 52px;
+    text-align: center;
+  }
+  .card-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .chev {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    transition: transform 0.2s;
+  }
+  .card.open .chev { transform: rotate(90deg); }
+  .card-body {
+    display: none;
+    padding: 0 16px 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #333;
+    border-top: 1px solid #f0ead9;
+  }
+  .card.open .card-body { display: block; padding-top: 12px; }
+  .card-body p { margin: 0 0 10px; }
+  .card-body strong { color: #1a1a1a; font-weight: 600; }
+  .card-body ul { padding-left: 20px; margin: 8px 0; }
+  .card-body li { margin-bottom: 5px; }
+
+  /* ACTION ROWS */
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-map { background: #e8f0fe; color: #1a5fa5; }
+  .btn-call { background: #e8f5e9; color: #2e7d32; }
+  .btn-web { background: #f0ead9; color: #8B6A00; }
+  .btn-sms { background: #e8f5e9; color: #2e7d32; }
+  .action-btn:active { opacity: 0.7; }
+
+  /* FLAG BOXES */
+  .flag {
+    background: #fff4e5;
+    border-left: 4px solid #e67e22;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #6b4423;
+  }
+  .flag.danger { background: #fbecec; border-left-color: #8B0000; color: #5a0000; }
+  .flag strong { color: inherit; }
+
+  /* SECTION DIVIDER WITHIN DAY */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #999;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 20px 0 8px;
+    padding-left: 4px;
+  }
+
+  /* INFO TAB */
+  .info-section { margin-bottom: 20px; }
+  .info-section h3 { font-size: 15px; margin: 0 0 10px; color: #8B0000; font-weight: 700; }
+  .checklist-item {
+    background: #fff;
+    border: 1px solid #e4ddd0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: transparent;
+    font-size: 14px;
+  }
+  .checklist-item.done .checkbox { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+  .checklist-item.done .check-text { text-decoration: line-through; color: #999; }
+  .check-text { font-size: 14px; line-height: 1.4; flex: 1; }
+  .check-sub { font-size: 12px; color: #888; margin-top: 2px; display: block; }
+  .checklist-item.done .check-sub { color: #bbb; }
+
+  /* CONTACT CARD */
+  .contact-card {
+    background: #fff;
+    border: 1px solid #e4ddd0;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .contact-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .contact-role { font-size: 13px; color: #666; margin-bottom: 10px; }
+  .contact-actions { display: flex; gap: 8px; }
+
+  /* PROPERTY MARKET CARDS */
+  .market-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e4ddd0;
+  }
+  .market-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .market-name { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .market-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag-strong { background: #e8f5e9; color: #2e7d32; }
+  .tag-medium { background: #fff4e5; color: #b8690a; }
+  .tag-weak { background: #fbecec; color: #8B0000; }
+  .market-pitch { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 10px; font-style: italic; }
+  .market-section { margin-top: 10px; }
+  .market-section-title { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .market-section ul { padding-left: 18px; margin: 0; font-size: 13px; line-height: 1.6; color: #333; }
+
+  /* FLIGHT CARD */
+  .flight-card {
+    background: #fff;
+    border: 1px solid #e4ddd0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .flight-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .flight-ep { text-align: center; }
+  .flight-ep .code { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .flight-ep .time { font-size: 13px; color: #666; margin-top: 2px; }
+  .flight-arrow { color: #8B0000; font-size: 18px; padding: 0 12px; }
+  .flight-meta { font-size: 13px; color: #555; line-height: 1.5; }
+  .flight-meta strong { color: #1a1a1a; }
+  .flight-label {
+    font-size: 11px;
+    color: #8B0000;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* STATUS PILL */
+  .status-pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .pill-book { background: #fbecec; color: #8B0000; }
+  .pill-confirm { background: #fff4e5; color: #b8690a; }
+  .pill-flex { background: #e8f0fe; color: #1a5fa5; }
+
+  /* TRIP SUMMARY STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    background: #fff;
+    border: 1px solid #e4ddd0;
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .stat-num { font-size: 20px; font-weight: 700; color: #8B0000; }
+  .stat-label { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #e4ddd0;
+    display: flex;
+    padding: 8px 0 calc(env(safe-area-inset-bottom) + 8px);
+    z-index: 200;
+  }
+  .nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: #999;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .nav-btn.active { color: #8B0000; }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* VIEW CONTROL */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* PREP NOTE */
+  .prep-note {
+    background: #f0ead9;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #5a4520;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Fear & Loathing in Montana</h1>
+  <p class="sub">Pat Nolan's Birthday Road Trip</p>
+  <p class="dates">May 14 – 18, 2026</p>
+</div>
+
+<!-- MAIN VIEW: ITINERARY -->
+<div class="view active" id="view-itinerary">
+
+  <!-- DAY TABS -->
+  <div class="tabs" id="dayTabs">
+    <button class="tab active" data-day="1"><span class="day-num">Thu</span>Day 1</button>
+    <button class="tab" data-day="2"><span class="day-num">Fri</span>Day 2</button>
+    <button class="tab" data-day="3"><span class="day-num">Sat</span>Day 3</button>
+    <button class="tab" data-day="4"><span class="day-num">Sun</span>Day 4</button>
+    <button class="tab" data-day="5"><span class="day-num">Mon</span>Day 5</button>
+  </div>
+
+  <div class="content">
+
+    <!-- DAY 1 -->
+    <div class="day-panel active" id="day-1">
+      <div class="day-header">
+        <div class="date">Thursday, May 14</div>
+        <h2>Land → Jackson</h2>
+        <p class="summary">Meet Pat at IDA. Drive to Jackson via the South Fork / Palisades real estate corridor — drive-by recon on US-26. Dinner with Mark & Sarah.</p>
+      </div>
+
+      <div class="section-label">Afternoon</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">3:31 PM</div>
+          <div class="card-title">Land at IDA, grab the rental
+            <div class="card-meta">Idaho Falls Regional Airport</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>You land 12 minutes before Pat on Alaska nonstop. Grab the SUV rental, hit the restroom, and be curbside when he walks out at 3:43 PM (UA 5950).</p>
+          <p><strong>SUV recommendation:</strong> 4WD required for Axolotl Lakes Saturday morning. Tahoe 4WD, Expedition 4WD, Yukon 4WD, or Jeep Grand Cherokee. Cost ~$50-100 more than 2WD but non-negotiable for the dirt-road portion of the trip.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Idaho%20Falls%20Regional%20Airport%2C%20ID">📍 Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">4:00 PM</div>
+          <div class="card-title">IDA → Jackson via the Swan Valley corridor
+            <div class="card-meta">~2h 25m · 110 mi on US-26 · property recon</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>The drive through Swan Valley and over Teton Pass at golden hour is a knockout opener. <strong>Critical:</strong> US-26 is the spine of the South Fork / Palisades real estate corridor — Pat sees the area on arrival without you having to plan a separate drive-by trip.</p>
+          <p><strong>Slow down (don't stop) at three points along US-26:</strong></p>
+          <ul>
+            <li><strong>~5:00 PM — South Fork Lodge (Kimmel's):</strong> Conant Valley, on US-26. Bought by Jimmy Kimmel + fly-fishing legend Oliver White in 2020 for ~$8M. Celebrity scene is real (Aniston, Mulaney, Fallon, Tapper have all been there). <strong>Closed to public — no walk-ins, no quick beers.</strong> Drive-by + tell Pat the story = 10 minutes of trip currency.</li>
+            <li><strong>~5:15 PM — Lodge at Palisades Creek:</strong> Irwin, on US-26. 4.9⭐, 74 reviews. Tells Pat what the area is about (high-end fishing destination).</li>
+            <li><strong>~5:30 PM — Palisades Reservoir overlook:</strong> Where US-26 climbs toward Alpine, the lake opens to the right. 5-min photo stop. ~70 miles of shoreline.</li>
+          </ul>
+          <p>Watch for wildlife along the Snake River. Arrive Jackson ~6:25 PM.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Idaho%20Falls%20Regional%20Airport%2C%20ID&destination=Jackson%2C%20WY">📍 Directions</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Evening — Jackson</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">6:30 PM</div>
+          <div class="card-title">Dinner with Mark & Sarah
+            <div class="card-meta">Family host · zero planning needed</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>If Mark & Sarah suggest going out:</strong> The Silver Dollar Bar at The Wort Hotel — 2,032 silver dollars inlaid in the bar top. Perfect F&L kickoff.</p>
+          <p><strong>Backup options if needed:</strong> Snake River Brewing or Local (prime rib, strong bar) on Broadway.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=The%20Wort%20Hotel%2C%20Jackson%2C%20WY">📍 Wort Hotel</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">Night</div>
+          <div class="card-title">Stay with Mark & Sarah
+            <div class="card-meta">Zero cost · max family goodwill</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 2 -->
+    <div class="day-panel" id="day-2">
+      <div class="day-header">
+        <div class="date">Friday, May 15</div>
+        <h2>The Big Drive Day</h2>
+        <p class="summary">Jackson → 9 AM Driggs builder meeting → Teton Valley → Last Chance lunch → Big Springs (giant trout) → Quake Lake → Ennis. Leave Jackson 7:45 AM. Arrive Ennis ~5:30 PM.</p>
+      </div>
+
+      <div class="section-label">Morning</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">7:45 AM</div>
+          <div class="card-title">Roll out of Jackson — early start
+            <div class="card-meta">Over Teton Pass · ~1h 15m to Driggs</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Grab breakfast to-go from Persephone Bakery or Cowboy Coffee before you leave. <strong>9 AM Driggs builder meeting is the morning's anchor — leave Jackson by 7:45 to land with 15 min buffer.</strong></p>
+          <p><strong>Check conditions:</strong> Teton Pass (WY-22 → ID-33) can get late-season snow. Verify status the night before.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Jackson%2C%20WY&destination=Driggs%2C%20ID">📍 Jackson → Driggs</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">9:00 AM</div>
+          <div class="card-title">⭐ Builder meeting — Driggs<span class="status-pill pill-confirm">Confirm</span>
+            <div class="card-meta">The investment-thesis stop</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>This is the real property work. Pat sees the builder you've been talking to in person — costs, timelines, lots, builds in progress.</p>
+          <p><strong>Confirm the week before:</strong> exact location, time, what builder will show you. Bring property questions written down — Pat won't remember everything.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">10:30 AM</div>
+          <div class="card-title">Teton Valley walk + drive-bys
+            <div class="card-meta">Post-meeting · 1-1.5 hr</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>After builder meeting, walk Main Street Driggs and drive the key subdivisions. The story for Pat: Jackson spillover, 30 min from Jackson Town Square, fraction of the price. Tetons loom on the east side.</p>
+          <ul>
+            <li>Coffee at Butter Cafe (Driggs) or Rise Coffee House (Victor)</li>
+            <li>Walk Main Street Driggs — giant buffalo on the I Love Teton Valley building</li>
+            <li>Drive-bys: Tributary (gated golf community), Snow Crest, Iron Wood, Teton Saddleback Vistas</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-label">Midday</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">12:30 PM</div>
+          <div class="card-title">Lunch at Last Chance / Island Park
+            <div class="card-meta">Henry's Fork roadhouse · F&L vibe</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Transit up through the high volcanic plateau. "Island Park" is technically the longest Main Street in America — 33 miles of Hwy 20. Fun trivia for Pat.</p>
+          <p><strong>Stop at:</strong> Pond's Lodge or Last Chance Bar & Grill — classic roadhouse, burgers, local fly-shop culture. Fits the theme.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Driggs%2C%20ID&destination=Island%20Park%2C%20ID">📍 Driggs → Island Park</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Last%20Chance%2C%20ID&destination=Big%20Springs%2C%20Island%20Park%2C%20ID">📍 Last Chance → Big Springs</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Afternoon — Big Springs + Quake Lake en route to Ennis</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">1:30 PM</div>
+          <div class="card-title">Big Springs — feed the giant trout
+            <div class="card-meta">~20 min off US-20 · ~45 min stop · National Natural Landmark</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Headwaters of the Henry's Fork. <strong>120 million gallons/day</strong> of crystal-clear 52°F water gushing from the ground. National Natural Landmark.</p>
+          <p><strong>The bridge:</strong> Crosses the spring outlet. Coin-operated fish-feeding dispensers. Giant rainbow + brook trout (protected from fishing here, so they get massive) congregate at the foot of the bridge waiting to be fed. Pat will love this.</p>
+          <p><strong>Bonus on-site:</strong> Johnny Sack Cabin (1930s German immigrant, hand-built with a miniature water wheelhouse), 1/2-mile ADA-accessible interpretive trail, often moose sightings.</p>
+          <p><strong>Directions:</strong> From Macks Inn (just past Last Chance), turn east on Big Springs Loop Rd / FS 059. ~4.5 miles paved to the bridge. Free, no entrance fee.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Big%20Springs%20Island%20Park%20Idaho">📍 Maps</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Big%20Springs%2C%20Island%20Park%2C%20ID&destination=Earthquake%20Lake%20Visitor%20Center%2C%20Montana">📍 Big Springs → Quake Lake</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">3:00 PM</div>
+          <div class="card-title">Quake Lake visitor center
+            <div class="card-meta">US-287 between W. Yellowstone & Ennis · ~30 min stop</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>The story:</strong> August 17, 1959 — 7.5-magnitude earthquake at 11:37 PM triggered an 80-million-ton landslide that buried Rock Creek Campground, killed 28 people, and dammed the Madison River to create this 6-mile-long lake. Trees still stick out of the water, drowned where they stood.</p>
+          <p>Visitor center has the timeline, survivor stories, geology displays. Walk out for the lake view. Sobering, fascinating, fast — 30 min total.</p>
+          <p><strong>Note:</strong> West Yellowstone temptation — drive through, don't stop. Tourist-trap saltwater taffy. Push west on US-287.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Earthquake%20Lake%20Visitor%20Center%20Montana">📍 Maps</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Earthquake%20Lake%20Visitor%20Center%2C%20Montana&destination=Ennis%2C%20MT">📍 Quake Lake → Ennis</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">5:30 PM</div>
+          <div class="card-title">Willie's Distillery — welcome-to-Montana stop
+            <div class="card-meta">312 E Main, Ennis · 4.7⭐ · open till 9 PM</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Drop bags at the Airbnb, then drive into Ennis. Walking distance from Continental Divide.</p>
+          <p>Free samples (locals warn: "dangerous"). Award-winning small-batch — huckleberry vodka, moonshine, bourbon. Pat tries the moonshine. Grab a bottle to take home.</p>
+          <p><strong>Pace it:</strong> 30-45 min stop. You're driving home tonight, no Uber in Ennis. One sample each, walk to Continental Divide for dinner.</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14066824117">📞 Call</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Willie%27s%20Distillery%2C%20Ennis%2C%20MT">📍 Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Evening — Ennis</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">6:30 PM</div>
+          <div class="card-title">Friday Dinner: Continental Divide<span class="status-pill pill-book">Book</span>
+            <div class="card-meta">47 Geyser St · Wed–Sat only</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>The Friday-night anchor dinner.</strong> 4.4 stars. Bison, elk loin, duck, halibut. Dinner service 5-9 PM only.</p>
+          <p><strong>BOOK AHEAD — call 406-682-7600.</strong></p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14066827600">📞 Reserve</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Continental%20Divide%20Restaurant%2C%20Ennis%2C%20MT">📍 Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">9:00 PM</div>
+          <div class="card-title">Nightcap crawl
+            <div class="card-meta">Long Branch · Gravel Bar · Silver Dollar</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>After Continental Divide, drift over to Main Street for the F&L nightcap.</p>
+          <ul>
+            <li><strong>Long Branch Saloon</strong> — 4.6 stars. Smash burgers, cheese curds, open till 2 AM.</li>
+            <li><strong>Gravel Bar</strong> — 4.4 stars, 729 reviews. Big beer list, lively.</li>
+            <li><strong>Silver Dollar Saloon</strong> — right across the street. Dive-bar vibe, third round if anyone's standing.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">Night</div>
+          <div class="card-title">Madison Valley Vista Designer Suite<span class="status-pill pill-confirm">Booked</span>
+            <div class="card-meta">Airbnb · 10 min from Ennis · valley views</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Designer guesthouse with knockout Madison Valley views. Polished concrete, radiant heat floors, spiral staircase, organic linens. Self check-in via lockbox.</p>
+          <p><strong>Sleeping setup:</strong> 1 bedroom · 1 queen + 2 single beds · 1 bathroom. All three of you in one bedroom — stagger the morning bathroom routine.</p>
+          <div class="flag">
+            <strong>Heads up:</strong> Max 4 guests, 1 bath for 3 people, 10 min drive each way to Ennis for Continental Divide dinner. Pace the drinks accordingly — no Uber in Ennis. Checkout is hard 10 AM Saturday.
+          </div>
+          <p><strong>Pre-trip questions to message host Kristen:</strong></p>
+          <ul>
+            <li>Confirm the place sleeps 3 adult males comfortably (not just "max 4")</li>
+            <li>SUV-friendly driveway? Steep approach?</li>
+            <li>Cell service quality at the property</li>
+            <li>Linens pre-set on the singles?</li>
+          </ul>
+          <div class="action-row">
+            <a class="action-btn btn-web" href="https://www.airbnb.com/rooms/1611826473188785966">🌐 Listing</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 3 -->
+    <div class="day-panel" id="day-3">
+      <div class="day-header">
+        <div class="date">Saturday, May 16</div>
+        <h2>Virginia City → Chico Hot Springs</h2>
+        <p class="summary">Slow morning in Ennis, then Axolotl Lakes (conditional on road), Virginia City walk + lunch, then early to Chico for Pat's birthday dinner. Pool's closed for renovation — soak Sunday at Yellowstone Hot Springs.</p>
+      </div>
+
+      <div class="section-label">Morning — Ennis</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">8:30 AM</div>
+          <div class="card-title">Yesterday's Soda Fountain — breakfast
+            <div class="card-meta">124 E Main · 4.4⭐ · "best breakfast in town"</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Sleep in a bit. Real sit-down breakfast on Main Street — classic small-town soda fountain + restaurant attached to an old-school pharmacy. Big portions, real bacon, locals love it.</p>
+          <p>Fuel up. You've got 3+ hours of ghost town walking ahead.</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14066824246">📞 Call</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Yesterday%27s%20Soda%20Fountain%2C%20Ennis%2C%20MT">📍 Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">9:30 AM</div>
+          <div class="card-title">Deemo's Meats — road provisions
+            <div class="card-meta">160 W Main · 4.6⭐ · opens 9 AM Saturday</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Mom-and-pop butcher with character. <strong>Stock the cooler:</strong></p>
+          <ul>
+            <li>Elk jerky (the standout)</li>
+            <li>Pickled quail eggs</li>
+            <li>Hand-made brats — flavors you've never seen elsewhere</li>
+            <li>Whatever weird seafood/cheese they've got that day</li>
+          </ul>
+          <p>Reviews call it "some of the best meat and jerky your lips will ever enjoy." Vacuum-pack anything you want to take home.</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14066827306">📞 Call</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Deemo%27s%20Meat%2C%20Ennis%2C%20MT">📍 Maps</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Ennis%2C%20MT&destination=Axolotl%20Lakes%20Wilderness%20Study%20Area%2C%20Montana">📍 Ennis → Axolotl</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Midday — Axolotl Lakes + Virginia City</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">10:00 AM</div>
+          <div class="card-title">Roll west on Hwy 287 toward Axolotl
+            <div class="card-meta">~25 min to the turnoff at MM 10-11</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>West on Hwy 287 out of Ennis. Watch for the paved parking area on the south side near the top of Virginia City Hill — it's <strong>1/4 mile east of MM 11</strong> (or 3/4 mile west of MM 10). That's where you turn off for Axolotl.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">10:30 AM</div>
+          <div class="card-title">Axolotl Lakes — drive in to the lakes<span class="status-pill pill-confirm">Conditional</span>
+            <div class="card-meta">3+ mi dirt road · ~45 min at the lakes</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <div class="flag danger">
+            <strong>⚠️ THREE-CONDITION GO/NO-GO — verify all three before turning off:</strong>
+            <br><br>
+            <strong>1. 4WD vehicle confirmed?</strong> Standard SUV rentals are 2WD. Must be specifically reserved as 4WD.<br>
+            <strong>2. BLM Dillon road conditions checked Friday afternoon?</strong> Call (406) 683-8000 before leaving Madison Valley Vista. Ask: "Is Axolotl Lake Road #42 dry and passable?" If they say wet/muddy or "4WD only" — abort.<br>
+            <strong>3. No-shame turnaround rule.</strong> If 200 yards in the road looks worse than expected — turn around. Don't push through.<br>
+            <br>
+            <strong>If any condition fails:</strong> skip Axolotl, continue 25 min to Virginia City, get an extra hour there.
+          </div>
+          <p><strong>The story:</strong> Wilderness Study Area, 40-acre BLM rec area at ~6,900 ft. Multiple small lakes, lush meadows, Madison Range views. Home to the rare axolotl salamander (a non-metamorphosing tiger salamander that keeps juvenile traits its whole life). Plaque on a rock at the lake.</p>
+          <p><strong>Drive-in:</strong> Through the gate with the cattle guard, west end of the parking area. 3.1 miles dirt road (blind corners, steep descent). At intersection turn LEFT (east), 0.7 miles. Lakes are visible from the road. ~45 min on-site (walk the lakeshore, find the plaque, photos).</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14066838000">📞 BLM Dillon</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Axolotl%20Lakes%20Wilderness%20Study%20Area%2C%20Montana&destination=Virginia%20City%2C%20MT">📍 Axolotl → Virginia City</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">12:00 PM</div>
+          <div class="card-title">Drive back out, continue to Virginia City
+            <div class="card-meta">~20 min out + 25 min west = 45 min to Virginia City</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Back up the dirt road, right turn west on Hwy 287, ~25 min to Virginia City.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">12:45 PM</div>
+          <div class="card-title">⭐ Virginia City — walk + beer + lunch
+            <div class="card-meta">~1.5 hrs · focused visit</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>The story:</strong> Gold rush boom town, 1863. Territorial capital. Vigilante HQ — this is where locals organized to ride to Bannack and hang Sheriff Henry Plummer at his own gallows on January 10, 1864. Pat is standing at the source of the Plummer Gang story.</p>
+          <p><strong>The plan:</strong> Walk Wallace Street (Main), pop into a couple of original buildings, beer + lunch at <strong>Pioneer Bar</strong> (4.6⭐) — backbar hauled from Missouri. Backup: Bale of Hay Saloon (4.5⭐, Montana's oldest bar). Out by 2:15 PM.</p>
+          <div class="flag">
+            <strong>Discipline check:</strong> One beer, lunch, walk, out. The 7:45 PM table-hold at Chico is the hard constraint.
+          </div>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Virginia%20City%2C%20MT">📍 Maps</a>
+            <a class="action-btn btn-call" href="tel:+14068435550">📞 Pioneer Bar</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Afternoon — Push to Paradise Valley</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">2:15 PM</div>
+          <div class="card-title">Virginia City → Chico Hot Springs
+            <div class="card-meta">~3 hrs · MT-287 → I-90 E → Hwy 89 S</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Back east on MT-287 → Ennis (don't stop) → US-287 N to Norris → I-90 E through Bozeman → exit Livingston → Hwy 89 S through Paradise Valley → Chico.</p>
+          <p>The last hour through Paradise Valley is <strong>stunning</strong> — Yellowstone River on your left, Absarokas on your right, Emigrant Peak straight ahead.</p>
+          <p><strong>Optional gas/coffee stop:</strong> Bozeman (you'll pass through). Don't get sidetracked.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Virginia%20City%2C%20MT&destination=Chico%20Hot%20Springs%20Resort%2C%20Pray%2C%20MT">📍 Directions</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Evening — Chico Hot Springs</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">5:15 PM</div>
+          <div class="card-title">Check in: Chico Hot Springs Resort<span class="status-pill pill-confirm">Booked</span>
+            <div class="card-meta">L410 Lower Lodge Suite · Confirmation #336512577</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>Booked by Pat May 7, 2026.</strong> Lower Lodge One-Bedroom Suite (L410) — 2 queens, living room, kitchenette, private bath. Total: $409.70 for the night.</p>
+          <div class="flag">
+            <strong>⚠️ Sleeping math for 3:</strong> L410 is 2 queens. Either someone shares a queen, or call Chico (406-333-4933) to confirm a rollaway/cot is available before May 14 (48-hr cancel deadline). Could also upgrade to L407 (1 king + 2 queens, purpose-built for 3) if inventory available.
+          </div>
+          <div class="flag">
+            <strong>⚠️ Pool status:</strong> Renovation was scheduled through May 21 (5 days after your stay). Confirmation email's pool copy is generic boilerplate — verify pool open/closed when you call. If still closed: free Yellowstone Hot Springs passes work for Sunday soak. If open: Saturday-night soak under the stars is back in play.
+          </div>
+          <p><strong>Check-in:</strong> 4 PM (early check-in not guaranteed but if you arrive by 4 PM you can grab pool wristbands and towels). <strong>Minimum age to rent:</strong> 21. <strong>No A/C, no TVs, no phones in rooms.</strong> WiFi is in most areas but not all units.</p>
+          <p><strong>Cancellation:</strong> 48-hour window. Last chance to change without penalty: Thursday May 14 at ~4 PM MDT.</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14063334933">📞 Chico</a>
+            <a class="action-btn btn-web" href="https://chicohotsprings.com">🌐 Website</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Chico%20Hot%20Springs%20Resort%2C%20Pray%2C%20MT">📍 Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">7:30 PM</div>
+          <div class="card-title">🎂 Pat's Birthday Dinner — Chico Dining Room<span class="status-pill pill-confirm">Booked</span>
+            <div class="card-meta">Ref BPXNDLAQ · party of 3 · 7:30 PM</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>Booked by Pat May 7.</strong> Ref <strong>BPXNDLAQ</strong>. Saturday May 16, 7:30 PM, party of 3.</p>
+          <p>Possibly the most iconic restaurant in Montana. White tablecloths, beef Wellington, flambéed desserts at the table. Bourdain ate here. Peter Fonda lived nearby.</p>
+          <div class="flag">
+            <strong>⚠️ Hard arrival window:</strong> Table held only 15 minutes past 7:30 PM. With the new schedule (Virginia City out by 2:15 PM, Chico arrival ~5:15 PM), you have a 2-hour buffer. <strong>Don't blow it on extra Pioneer Bar beers.</strong>
+          </div>
+          <div class="flag">
+            <strong>⚠️ Cancellation:</strong> 24-hr policy. $25/guest no-show fee charged to Pat's card. Last chance to cancel without penalty: Friday May 15 at 7:30 PM MDT (you'll be at Continental Divide for dinner).
+          </div>
+          <p>Mention the birthday at check-in — they'll do something special.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">9:00 PM</div>
+          <div class="card-title">🎵 Live music in the Saloon
+            <div class="card-meta">Saturday-night Chico institution</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Saturday night live music in the Chico Saloon is part of the legend. Locals + travelers, dancing, cold beer. Bands rotate weekly — confirm the lineup when you book.</p>
+          <p>This is Pat's birthday peak. Stay as late as you want — your room is 50 feet away.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 4 -->
+    <div class="day-panel" id="day-4">
+      <div class="day-header">
+        <div class="date">Sunday, May 17</div>
+        <h2>Yellowstone Hot Springs → Bozeman</h2>
+        <p class="summary">Slow Chico breakfast, drive south to Yellowstone Hot Springs for the soak, Roosevelt Arch photo at the park's north entrance, scenic drive back through Paradise Valley, lunch in Livingston, last night in Bozeman.</p>
+      </div>
+
+      <div class="section-label">Morning — Chico</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">8:30 AM</div>
+          <div class="card-title">Sunday breakfast at Chico Dining Room
+            <div class="card-meta">Locally famous Sunday buffet</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Sunday breakfast buffet at Chico is locally legendary. Eggs benedict, prime rib hash, fresh pastries. Pace yourself — pool day ahead.</p>
+          <p><strong>Alternative:</strong> Continental at the saloon if you want to be on the road earlier.</p>
+        </div>
+      </div>
+
+      <div class="section-label">Midday — Yellowstone Hot Springs</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">10:00 AM</div>
+          <div class="card-title">Drive south to Yellowstone Hot Springs
+            <div class="card-meta">~35 min · Hwy 89 S through Paradise Valley</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>One of the great Montana drives — Yellowstone River the whole way, Absaroka peaks, Yankee Jim Canyon, into Gardiner. Take it slow.</p>
+          <p><strong>Important:</strong> Bring your free Yellowstone Hot Springs passes from Chico check-in (one per guest per night).</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Chico%20Hot%20Springs%20Resort%2C%20Pray%2C%20MT&destination=Yellowstone%20Hot%20Springs%2C%20Gardiner%2C%20MT">📍 Directions</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">10:45 AM</div>
+          <div class="card-title">⭐ Soak at Yellowstone Hot Springs
+            <div class="card-meta">8 mi N of Gardiner · 4 pools · 100-105°F</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Built 2018, mineral-rich, 4 pools (hot, cold plunge, mid pool, Kneipp walk). Yellowstone River along the property, eagles overhead, mountains 360°. Reviews are uniformly strong — "absolute magical afternoon," "favorite hot spring I've ever taken."</p>
+          <p><strong>2-hour soak.</strong> Showers, lockers, café on-site. Plan to leave by 1 PM to fit Roosevelt Arch + lunch.</p>
+          <div class="flag">
+            <strong>Hours:</strong> Wed–Sun 9 AM–9 PM. Closed Mon/Tue. Sunday May 17 ✅
+          </div>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+18339777464">📞 Call</a>
+            <a class="action-btn btn-web" href="https://yellowstonehotspringsmt.com">🌐 Site</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Yellowstone%20Hot%20Springs%2C%20Gardiner%2C%20MT&destination=Roosevelt%20Arch%2C%20Gardiner%2C%20MT">📍 Yellowstone HS → Roosevelt Arch</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">1:00 PM</div>
+          <div class="card-title">Roosevelt Arch — Yellowstone north entrance
+            <div class="card-meta">8 mi south · 15 min stop · free</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Drive 8 minutes south to Gardiner. The Roosevelt Arch ("For the Benefit and Enjoyment of the People") marks Yellowstone's north entrance — dedicated by Teddy Roosevelt himself in 1903. Pat sees Yellowstone country, gets the photo, no entrance fee for just driving to the boundary.</p>
+          <p>Quick stop. Don't enter the park — that's a future trip hook.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Roosevelt%20Arch%2C%20Gardiner%2C%20MT">📍 Maps</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Roosevelt%20Arch%2C%20Gardiner%2C%20MT&destination=Livingston%2C%20MT">📍 Gardiner → Livingston</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Afternoon — Paradise Valley + Livingston</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">1:30 PM</div>
+          <div class="card-title">Drive Gardiner → Livingston via Paradise Valley
+            <div class="card-meta">~50 min · scenic Yellowstone River corridor</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Hwy 89 N runs the spine of Paradise Valley — possibly the most scenic 50 miles in Montana. Yellowstone River on your left, Absaroka Range on your right, Emigrant Peak straight ahead.</p>
+          <p>The literary-Montana corridor: Jim Harrison, McGuane, Brokaw all rooted here. Drive slow, let Pat take it in. <strong>Not a property market for this trip</strong> — too far from skiing — but worth seeing as part of the Montana experience.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">2:30 PM</div>
+          <div class="card-title">Late lunch in Livingston
+            <div class="card-meta">Real working Montana town · railroad heritage</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Livingston is the writer's town — Jim Harrison, Thomas McGuane, Tom Brokaw all roots here. Walk Main Street, peek into Dan Bailey's Fly Shop (Montana institution since 1938).</p>
+          <ul>
+            <li><strong>Mark's In & Out</strong> — classic burger drive-in, cheap and great</li>
+            <li><strong>2nd Street Bistro</strong> — sit-down, more curated</li>
+            <li><strong>Neptune's Brewery</strong> — beers + sandwiches, lively</li>
+            <li><strong>Murray Bar</strong> — at the Murray Hotel, perfect F&L afternoon stop</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-label">Evening — Bozeman</div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">4:00 PM</div>
+          <div class="card-title">Livingston → Bozeman
+            <div class="card-meta">~30 min on I-90 W</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Quick interstate drive over Bozeman Pass. Check in, drop bags.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Livingston%2C%20MT&destination=Bozeman%2C%20MT">📍 Directions</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">4:30 PM</div>
+          <div class="card-title">Check in: Field & Stream Lodge Bozeman<span class="status-pill pill-confirm">Booked</span>
+            <div class="card-meta">5 E Baxter Ln · 4.5⭐ · 1 night, 1 room, 3 adults</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p><strong>Booked by Pat.</strong> Hotels.com itinerary 7343********. Check-in 4:00 PM Sunday, check-out 11:00 AM Monday. Recently renovated 70s-era lodge re-themed around the Field & Stream magazine brand — quirky Montana, not generic chain hotel.</p>
+          <div class="flag">
+            <strong>Heads up — location:</strong> North of downtown near I-90, ~5 min from BZN airport, ~10 min from downtown Bozeman. Dinner downtown = 10-min Uber each way. Plan accordingly.
+          </div>
+          <p><strong>Note from reviews:</strong> Pool/fire pits/lobby fireplace sometimes broken — doesn't matter for a Sunday-night stay anyway. Front desk staff (especially Jo Jo) reviewed warmly. Beds reportedly very comfortable.</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14064269400">📞 Hotel</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Field%20%26%20Stream%20Lodge%20Bozeman">📍 Maps</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Livingston%2C%20MT&destination=Field%20%26%20Stream%20Lodge%20Bozeman">📍 Livingston → Hotel</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">7:00 PM</div>
+          <div class="card-title">Last dinner — Revelry or Bitterroot Bistro<span class="status-pill pill-book">Book</span>
+            <div class="card-meta">Both downtown · Uber from hotel · 48-hr reservation</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <ul>
+            <li><strong>Revelry</strong> (N Tracy Ave) — 4.6⭐, 1,221 reviews. Bison bolognese, wood-fired pizzas, lively. Better for group energy.</li>
+            <li><strong>Bitterroot Bistro</strong> (S Willson Ave) — 4.8⭐, 236 reviews. Trout standout. Quieter, chef's-room feel.</li>
+          </ul>
+          <p><strong>Both ~10 min Uber from Field & Stream Lodge.</strong> Plan to Uber over and back — last night, no driving anxiety.</p>
+          <div class="action-row">
+            <a class="action-btn btn-call" href="tel:+14064041400">📞 Revelry</a>
+            <a class="action-btn btn-web" href="https://www.revelrymt.com">🌐 revelrymt.com</a>
+            <a class="action-btn btn-call" href="tel:+14066246009">📞 Bitterroot</a>
+            <a class="action-btn btn-web" href="https://www.bitterrootbistro.com">🌐 bitterrootbistro.com</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">9:00 PM</div>
+          <div class="card-title">Downtown Bozeman bar walk
+            <div class="card-meta">Stay downtown after dinner · Uber back</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Since you're already downtown for dinner, hit a bar or two before Uber-ing back to the hotel.</p>
+          <ul>
+            <li><strong>Plonk</strong> — wine bar, cocktails, good for a sit-down</li>
+            <li><strong>Jam!</strong> — late-night vibe</li>
+            <li><strong>The Crystal</strong> — divey, locals, character</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 5 -->
+    <!-- DAY 5 -->
+    <div class="day-panel" id="day-5">
+      <div class="day-header">
+        <div class="date">Monday, May 18</div>
+        <h2>Depart Bozeman</h2>
+        <p class="summary">Coffee, one last walk, drop the rental. Pat's out at 2:40 PM. You follow shortly after.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">9:00 AM</div>
+          <div class="card-title">Breakfast + coffee
+            <div class="card-meta">Closer to hotel: Storyville Coffee · Stockyard Cafe</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Field & Stream is 10 min from downtown, so don't backtrack unless you want to. Closer options near the hotel and en route to BZN:</p>
+          <ul>
+            <li><strong>Storyville Coffee Bozeman</strong> (~5 min from hotel)</li>
+            <li><strong>Stockyard Cafe</strong> — Bozeman classic, hearty breakfast</li>
+            <li><strong>Wild Crumb / Nova Cafe</strong> — only worth it if you want to swing through downtown one more time</li>
+          </ul>
+          <p>Or just grab the on-property breakfast at Field & Stream's restaurant if simpler.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">11:30 AM</div>
+          <div class="card-title">Drop rental at BZN
+            <div class="card-meta">~5 min from Field & Stream Lodge</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Field & Stream is right next to the airport — 5 min drive to BZN. 90 minutes before Pat's 2:40 PM departure is plenty of buffer.</p>
+          <p><strong>In terminal:</strong> MAP Brewing has an airport location — grab a final beer together before gates.</p>
+          <div class="action-row">
+            <a class="action-btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Bozeman%20Yellowstone%20International%20Airport">📍 BZN</a>
+            <a class="action-btn btn-map" href="https://www.google.com/maps/dir/?api=1&origin=Field%20%26%20Stream%20Lodge%20Bozeman&destination=Bozeman%20Yellowstone%20International%20Airport">📍 Hotel → BZN</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">2:40 PM</div>
+          <div class="card-title">Pat departs — UA 2258
+            <div class="card-meta">BZN → DEN → onward</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="time-badge">~3 PM</div>
+          <div class="card-title">Your turn — BZN → SEA
+            <div class="card-meta">Alaska nonstop · ~2 hours</div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+        <div class="card-body">
+          <p>Book an Alaska nonstop BZN→SEA departing 3:00-4:00 PM. Back in Seattle by early evening.</p>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- /.content -->
+</div> <!-- /#view-itinerary -->
+
+<!-- VIEW: FLIGHTS -->
+<div class="view" id="view-flights">
+  <div class="content" style="padding-top: 20px;">
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num">5</div><div class="stat-label">Days</div></div>
+      <div class="stat-box"><div class="stat-num">2</div><div class="stat-label">States</div></div>
+      <div class="stat-box"><div class="stat-num">4</div><div class="stat-label">Flights</div></div>
+    </div>
+
+    <div class="section-label">Pat's Flights (confirmed)</div>
+
+    <div class="flight-card">
+      <div class="flight-label">Pat Arrival · Thu May 14</div>
+      <div class="flight-route">
+        <div class="flight-ep"><div class="code">UA</div><div class="time">5950</div></div>
+        <div class="flight-arrow">→</div>
+        <div class="flight-ep"><div class="code">IDA</div><div class="time">3:43 PM</div></div>
+      </div>
+      <div class="flight-meta">Pat lands at Idaho Falls Regional on United 5950.</div>
+    </div>
+
+    <div class="flight-card">
+      <div class="flight-label">Pat Departure · Mon May 18</div>
+      <div class="flight-route">
+        <div class="flight-ep"><div class="code">BZN</div><div class="time">2:40 PM</div></div>
+        <div class="flight-arrow">→</div>
+        <div class="flight-ep"><div class="code">UA</div><div class="time">2258</div></div>
+      </div>
+      <div class="flight-meta">Connects through Denver on 737-900.</div>
+    </div>
+
+    <div class="section-label">Your Flights (to book)</div>
+
+    <div class="flight-card">
+      <div class="flight-label">Outbound · Thu May 14 <span class="status-pill pill-book">Book</span></div>
+      <div class="flight-route">
+        <div class="flight-ep"><div class="code">SEA</div><div class="time">~12:45 PM</div></div>
+        <div class="flight-arrow">→</div>
+        <div class="flight-ep"><div class="code">IDA</div><div class="time">~3:31 PM</div></div>
+      </div>
+      <div class="flight-meta"><strong>Alaska nonstop</strong> — only nonstop on this route. Lands 12 min before Pat. Verify exact schedule on alaskaair.com before booking.</div>
+      <div class="action-row" style="margin-top: 12px;">
+        <a class="action-btn btn-web" href="https://www.alaskaair.com">🌐 Alaska</a>
+      </div>
+    </div>
+
+    <div class="flight-card">
+      <div class="flight-label">Return · Mon May 18 <span class="status-pill pill-book">Book</span></div>
+      <div class="flight-route">
+        <div class="flight-ep"><div class="code">BZN</div><div class="time">~3–4 PM</div></div>
+        <div class="flight-arrow">→</div>
+        <div class="flight-ep"><div class="code">SEA</div><div class="time">~5–6 PM</div></div>
+      </div>
+      <div class="flight-meta"><strong>Alaska nonstop</strong> — match Pat's window so you can walk him to his gate before your own boarding. ~2 hours flight time.</div>
+    </div>
+
+    <div class="prep-note" style="margin-top: 16px;">
+      <strong>SUV rental tip:</strong> One-way IDA → BZN. Expect ~$150-200 extra in one-way fees. <strong>4WD required</strong> — Tahoe 4WD, Expedition 4WD, Yukon 4WD, or Jeep Grand Cherokee. Standard 2WD rentals don't qualify for the dirt road into Axolotl Lakes Saturday morning.
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: PROPERTIES -->
+<div class="view" id="view-properties">
+  <div class="content" style="padding-top: 20px;">
+
+    <div class="prep-note">
+      <strong>Budget: ~$1.3M.</strong> Filter: only markets with skiing easily accessible nearby. Drive-by only — no agents, no showings. Run fresh Zillow/Realtor.com searches the night before for current addresses.
+    </div>
+
+    <div class="market-card">
+      <div class="market-header">
+        <div class="market-name">Teton Valley, ID</div>
+        <span class="market-tag tag-strong">Strongest</span>
+      </div>
+      <div class="market-pitch">Victor · Driggs · Tetonia. Jackson spillover. 30 min from Jackson Town Square, ID tax structure, Tetons out your window, active STR market. <strong>Ski:</strong> Grand Targhee 15 min, Jackson Hole 45 min.</div>
+      <div class="market-section">
+        <div class="market-section-title">What $1.3M buys</div>
+        <ul>
+          <li>New 3-4BR modern home in Driggs, 2,500-3,500 sq ft</li>
+          <li>2-5 acre lot + starter custom build in Snow Crest (gated, Teton views)</li>
+          <li>Tributary Club cabin — $1.2-2M range, $1.3M hits lower tier</li>
+        </ul>
+      </div>
+      <div class="market-section">
+        <div class="market-section-title">Drive-by loop (20 min)</div>
+        <ul>
+          <li>Downtown Driggs → south to Tributary (501 Tributary Dr)</li>
+          <li>East up Ski Hill Rd toward Grand Targhee</li>
+          <li>Back through Iron Wood and north through Tetonia</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="market-card">
+      <div class="market-header">
+        <div class="market-name">Swan Valley / Irwin / Palisades, ID</div>
+        <span class="market-tag tag-strong">Value play</span>
+      </div>
+      <div class="market-pitch">Eastern ID corridor along US-26, ~50 min from IDA, 1 hr from Jackson. South Fork of the Snake — best dry-fly river in America. Palisades Reservoir = 70 mi of shoreline, water sports, year-round activity. ID tax structure. <strong>Ski:</strong> Grand Targhee ~50 min, Jackson Hole ~1 hr.</div>
+      <div class="market-section">
+        <div class="market-section-title">What $1.3M buys</div>
+        <ul>
+          <li>Riverfront on the South Fork — 5-15 acres + 3-4BR home (real frontage, not "near")</li>
+          <li>Lot in <strong>Palisades Creek Ranch</strong> (gated, 2-6 acres, snow management included) + custom build</li>
+          <li>Lot in <strong>South Fork Ranch Subdivision</strong> + build — Conant Valley views, year-round access</li>
+          <li>Townhome / cabin with active STR income (one Airbnb listing reported $24,700 in 2024 bookings)</li>
+        </ul>
+      </div>
+      <div class="market-section">
+        <div class="market-section-title">Drive-by — done on Day 1 arrival</div>
+        <ul>
+          <li>Already routed: South Fork Lodge (Kimmel's), Lodge at Palisades Creek, Palisades Reservoir overlook</li>
+          <li>Pat sees the corridor on the IDA → Jackson drive — no separate trip needed</li>
+        </ul>
+      </div>
+      <div class="market-section">
+        <div class="market-section-title">Honest trade-off vs. Teton Valley</div>
+        <ul>
+          <li>✅ Way better value at $1.3M, real water access, lower elevation (5,300 vs 6,200 ft)</li>
+          <li>⚠️ Smaller community (population &lt;1,000), limited dining, ski access is "weekend trip" not "after-work"</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- VIEW: CONTACTS & PREP -->
+<div class="view" id="view-prep">
+  <div class="content" style="padding-top: 20px;">
+
+    <div class="info-section">
+      <h3>📞 Key Contacts</h3>
+
+      <div class="contact-card">
+        <div class="contact-name">Chico Hot Springs Resort</div>
+        <div class="contact-role">Pray, MT · Saturday lodging + birthday dinner</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14063334933">📞 Call</a>
+          <a class="action-btn btn-web" href="https://chicohotsprings.com">🌐 Site</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Madison Valley Vista (Airbnb)</div>
+        <div class="contact-role">Friday lodging · message host Kristen via app</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-web" href="https://www.airbnb.com/rooms/1611826473188785966">🌐 Listing</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Continental Divide Restaurant</div>
+        <div class="contact-role">Ennis · Friday night dinner</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14066827600">📞 Call</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Yesterday's Soda Fountain</div>
+        <div class="contact-role">Ennis · Saturday breakfast</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14066824246">📞 Call</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Deemo's Meats</div>
+        <div class="contact-role">Ennis · jerky + provisions for the road</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14066827306">📞 Call</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Willie's Distillery</div>
+        <div class="contact-role">Ennis · Saturday morning stop</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14066824117">📞 Call</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Yellowstone Hot Springs</div>
+        <div class="contact-role">Gardiner · Sunday morning soak (Wed-Sun)</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+18339777464">📞 Call</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">BLM Dillon Field Office</div>
+        <div class="contact-role">Axolotl Lakes info · confirm plaque</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14066838000">📞 Call</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Revelry Bozeman</div>
+        <div class="contact-role">Sunday night dinner option A</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14064041400">📞 Call</a>
+          <a class="action-btn btn-web" href="https://www.revelrymt.com">🌐 Website</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-name">Bitterroot Bistro</div>
+        <div class="contact-role">Sunday night dinner option B</div>
+        <div class="contact-actions">
+          <a class="action-btn btn-call" href="tel:+14066246009">📞 Call</a>
+          <a class="action-btn btn-web" href="https://www.bitterrootbistro.com">🌐 Website</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h3>✅ Book NOW (30 days out)</h3>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">✅ Flights — SEA→IDA Thu + BZN→SEA Mon — BOOKED<span class="check-sub">Alaska nonstops both ends</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">✅ Rental SUV — National BOOKED · ⚠️ 4WD TBD at pickup<span class="check-sub">National said may have 4WD on arrival — call IDA (208) 522-5276 to push for held 4WD</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Madison Valley Vista Airbnb · Fri May 15<span class="check-sub">Confirm bedding for 3 + driveway w/ host</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Continental Divide · Fri dinner reservation<span class="check-sub">406-682-7600 · Wed-Sat only · ~6:30 PM party of 3</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">✅ Chico Hot Springs L410 — BOOKED by Pat<span class="check-sub">Conf #336512577 · $409.70 · 48-hr cancel by Thu May 14</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">✅ Chico Dining Room — BOOKED by Pat<span class="check-sub">Ref BPXNDLAQ · Sat 7:30 PM · party of 3 · 24-hr cancel</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">✅ Bozeman lodging · Sun May 17 — BOOKED by Pat<span class="check-sub">Field & Stream Lodge Bozeman · Hotels.com itinerary 7343********</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Sunday dinner Bozeman · Revelry or Bitterroot<span class="check-sub">Reserve 48 hours ahead · 406-404-1400 / 406-624-6009</span></div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h3>📋 2 Weeks Out</h3>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Confirm Dan — 2 or 3?<span class="check-sub">Adjust rooms & dinner bookings</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">⭐ Confirm Driggs builder meeting · Fri 9 AM<span class="check-sub">Location, agenda, lots/builds to see</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">⭐ Call Chico re: L410 sleeping for 3 + pool status<span class="check-sub">Conf #336512577 · rollaway? upsell to L407? pool open or closed?</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">⭐ Call National IDA · push for held 4WD<span class="check-sub">(208) 522-5276 · ref reservation # · ask if they can hold a 4WD specifically</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Call BLM Dillon Friday afternoon · Axolotl road conditions<span class="check-sub">406-683-8000 · "Is Axolotl Lake Rd #42 dry/passable?" · if wet/muddy, abort</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Confirm Yellowstone Hot Springs Sun open<span class="check-sub">May 17 · Wed-Sun · 833-977-7464</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Pull fresh property listings<span class="check-sub">Zillow for current drive-by addresses</span></div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h3>🧥 Packing List</h3>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Layers — 30°F mornings, 70°F afternoons<span class="check-sub">Assume both</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Rain shell<span class="check-sub">No debate</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Real shoes — grip for wet gravel<span class="check-sub">Not sneakers</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Polarized sunglasses<span class="check-sub">For any fishing situation</span></div>
+      </div>
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-text">Daypack per person</div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h3>🚨 Plan B — What Could Go Sideways</h3>
+      <div class="market-card">
+        <div class="market-section-title">Teton Pass closed (snow)</div>
+        <ul class="market-section">
+          <li>Reroute Jackson → Alpine → Palisades → IDA → US-20 into Island Park. Adds ~1 hour. Verify pass status night before via wyoroad.info.</li>
+        </ul>
+      </div>
+      <div class="market-card">
+        <div class="market-section-title">Driggs builder cancels Friday morning</div>
+        <ul class="market-section">
+          <li>Push everything 1 hour earlier — leave Jackson at 6:45 AM, breakfast in Driggs at Butter Cafe, do Teton Valley walk + drive-bys at 8:30, hit Last Chance lunch by 11:30. Buys you a longer Big Springs / Quake Lake afternoon.</li>
+          <li>OR push everything 1 hour later — sleep in, leave Jackson 8:45 AM, but watch the back end (Continental Divide is locked at 6:30 PM).</li>
+        </ul>
+      </div>
+      <div class="market-card">
+        <div class="market-section-title">Axolotl road muddy / no 4WD secured</div>
+        <ul class="market-section">
+          <li>Skip Axolotl entirely. Continue 25 min west on Hwy 287 to Virginia City. Use the extra hour for a longer Virginia City walk + lunch. Save Axolotl for next trip with proper conditions.</li>
+        </ul>
+      </div>
+      <div class="market-card">
+        <div class="market-section-title">Bad weather Saturday (storm/heavy rain)</div>
+        <ul class="market-section">
+          <li>Skip Axolotl AND tighten Virginia City to ~45 min (cover at Pioneer Bar). Push directly Ennis → Chico via I-90 (~3 hrs). Arrive Chico early afternoon. Long lazy day at the resort, big dinner.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-view="itinerary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+    Itinerary
+  </button>
+  <button class="nav-btn" data-view="flights">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+    Flights
+  </button>
+  <button class="nav-btn" data-view="properties">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 2l9 7.5V21a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5z"/><path d="M9 22V12h6v10"/></svg>
+    Property
+  </button>
+  <button class="nav-btn" data-view="prep">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>
+    Prep
+  </button>
+</nav>
+
+<script>
+  // Tab switching (day tabs)
+  document.querySelectorAll('#dayTabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#dayTabs .tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('day-' + tab.dataset.day).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Bottom nav view switching
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.view).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  });
+
+  // Card expand/collapse
+  function toggleCard(header) {
+    header.parentElement.classList.toggle('open');
+  }
+
+  // Checklist toggle (persistent via localStorage)
+  function toggleCheck(item) {
+    item.classList.toggle('done');
+    saveCheckState();
+  }
+
+  function saveCheckState() {
+    const states = [];
+    document.querySelectorAll('.checklist-item').forEach((item, i) => {
+      if (item.classList.contains('done')) states.push(i);
+    });
+    try { localStorage.setItem('fl_checks', JSON.stringify(states)); } catch(e) {}
+  }
+
+  function loadCheckState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fl_checks') || '[]');
+      const items = document.querySelectorAll('.checklist-item');
+      saved.forEach(i => { if (items[i]) items[i].classList.add('done'); });
+    } catch(e) {}
+  }
+
+  loadCheckState();
+</script>
+
+</body>
+</html>
